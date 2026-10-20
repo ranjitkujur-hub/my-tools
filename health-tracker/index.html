@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'self'; manifest-src 'self'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#0b6e69">
+  <meta name="description" content="किडनी स्वास्थ्य रिकॉर्ड — Private, offline kidney health record keeper.">
+  <title>किडनी स्वास्थ्य रिकॉर्ड / Kidney Health Tracker</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="#/home"><img src="icons/icon.svg" alt="" width="32" height="32"><span><span lang="hi">किडनी स्वास्थ्य रिकॉर्ड</span><small>Kidney Health Tracker</small></span></a>
+    <h1 id="page-title"></h1>
+  </header>
+  <main id="main" tabindex="-1"><p class="empty">लोड हो रहा है… / Loading…</p></main>
+  <footer class="disclaimer" id="disclaimer"></footer>
+  <nav class="bottom-nav" aria-label="मुख्य / Main">
+    <a href="#/home" data-tab="home"><span class="ic">🏠</span><span lang="hi">होम</span><small>Home</small></a>
+    <a href="#/labs" data-tab="labs"><span class="ic">🧪</span><span lang="hi">जाँच</span><small>Tests</small></a>
+    <a href="#/trends" data-tab="trends"><span class="ic">📈</span><span lang="hi">ग्राफ़</span><small>Trends</small></a>
+    <a href="#/meds" data-tab="meds"><span class="ic">💊</span><span lang="hi">दवा</span><small>Meds</small></a>
+    <a href="#/more" data-tab="more"><span class="ic">☰</span><span lang="hi">और</span><small>More</small></a>
+  </nav>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <noscript><p>इस ऐप के लिए JavaScript चालू करें / Please enable JavaScript.</p></noscript>
+  <script src="js/calc.js"></script>
+  <script src="js/backup.js"></script>
+  <script src="js/export.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/demo.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
