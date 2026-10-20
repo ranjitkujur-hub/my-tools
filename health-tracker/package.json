@@ -1,0 +1,10 @@
+{
+  "name": "kidney-health-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Private, offline kidney health record keeper (static PWA, no build step).",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test"
+  }
+}
