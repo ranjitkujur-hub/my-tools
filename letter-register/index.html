@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="connect-src 'none'; object-src 'none'; base-uri 'none'">
+<title>पत्र पंजी एवं घटनाक्रम / Letter Register</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="topbar no-print">
+  <div class="brand">
+    <span class="brand-hi">पत्र पंजी एवं घटनाक्रम</span>
+    <span class="brand-en">Letter Register &amp; Chronology</span>
+  </div>
+  <nav id="nav" aria-label="मुख्य मेनू / Main menu">
+    <a href="#register" data-screen="register">पंजी<small>Register</small></a>
+    <a href="#add" data-screen="add">+ नया<small>Add</small></a>
+    <a href="#pending" data-screen="pending">लंबित<small>Pending</small> <span id="pending-badge" class="badge" hidden></span></a>
+    <a href="#chronology" data-screen="chronology">घटनाक्रम<small>Chronology</small></a>
+    <a href="#annexure" data-screen="annexure">अनुलग्नक<small>Annexure</small> <span id="annex-badge" class="badge" hidden></span></a>
+    <a href="#import" data-screen="import">आयात<small>Import</small></a>
+    <a href="#data" data-screen="data">बैकअप<small>Backup &amp; data</small></a>
+  </nav>
+</header>
+
+<div id="banners" class="no-print"></div>
+
+<main id="main" class="no-print">
+
+  <!-- REGISTER -->
+  <section id="screen-register" class="screen" hidden>
+    <div class="toolbar">
+      <input id="f-q" type="search" class="grow" placeholder="खोजें — पत्रांक, विषय, प्रेषक, सार... / Search everything" aria-label="खोजें / Search">
+      <button id="f-toggle" type="button" class="secondary">फ़िल्टर / Filters</button>
+      <button id="f-clear" type="button" class="secondary">साफ़ करें / Clear</button>
+    </div>
+    <div id="filters" class="filters">
+      <label>प्रकार / Type<select id="f-type"></select></label>
+      <label>मामला / Matter<select id="f-matter"></select></label>
+      <label>स्थिति / Status<select id="f-status"></select></label>
+      <label>दिनांक से / From date<input id="f-dfrom" placeholder="DD.MM.YYYY" inputmode="numeric"></label>
+      <label>दिनांक तक / To date<input id="f-dto" placeholder="DD.MM.YYYY" inputmode="numeric"></label>
+      <label>प्रेषक / From<input id="f-from" list="dl-from"></label>
+      <label>प्राप्तकर्ता / To<input id="f-to" list="dl-to"></label>
+      <label>क्रम / Sort<select id="f-sort"><option value="desc">नया पहले / Newest first</option><option value="asc">पुराना पहले / Oldest first</option></select></label>
+    </div>
+    <div class="toolbar small">
+      <span id="reg-count" class="muted"></span>
+      <span class="grow"></span>
+      <button id="reg-chrono" type="button" class="secondary">इन परिणामों का घटनाक्रम / Chronology of these</button>
+      <button id="reg-annex" type="button" class="secondary" disabled>चयनित → अनुलग्नक / Selected → Annexure</button>
+    </div>
+    <div class="table-wrap">
+      <table id="reg-table" class="register">
+        <thead><tr>
+          <th class="c-check"><input type="checkbox" id="reg-all" aria-label="सभी चुनें / Select all"></th>
+          <th>दिनांक<br><small>Date</small></th>
+          <th>प्रकार<br><small>Type</small></th>
+          <th>पत्रांक<br><small>Letter no.</small></th>
+          <th>प्रेषक → प्राप्तकर्ता<br><small>From → To</small></th>
+          <th>विषय<br><small>Subject</small></th>
+          <th>मामला<br><small>Matter</small></th>
+          <th>स्थिति<br><small>Status</small></th>
+        </tr></thead>
+        <tbody id="reg-body"></tbody>
+      </table>
+    </div>
+    <div id="reg-empty" class="empty" hidden></div>
+    <div id="reg-more" class="center" hidden><button type="button" class="secondary" id="reg-more-btn">और दिखाएँ / Show more</button></div>
+  </section>
+
+  <!-- ADD / EDIT -->
+  <section id="screen-add" class="screen" hidden>
+    <h2 id="form-title">नया पत्र / New entry</h2>
+    <div id="form-relations" class="relations" hidden></div>
+    <form id="entry-form" autocomplete="off" novalidate>
+      <div class="grid">
+        <fieldset class="span2 type-pick">
+          <legend>प्रकार / Type</legend>
+          <label><input type="radio" name="type" value="in" checked> आवक / Incoming</label>
+          <label><input type="radio" name="type" value="out"> जावक / Outgoing</label>
+          <label><input type="radio" name="type" value="event"> घटना / Event <small>(बैठक, निरीक्षण, आदेश, अधिसूचना)</small></label>
+        </fieldset>
+        <label>पत्रांक / ज्ञापांक <small>Letter no.</small><input name="letterNo"></label>
+        <label>दिनांक <small>Date — DD.MM.YYYY, या MM.YYYY / YYYY (लगभग)</small><input name="date" placeholder="DD.MM.YYYY" inputmode="numeric" data-date="any"><span class="hint" data-hint="date"></span></label>
+        <label><span id="recv-label">प्राप्ति तिथि <small>Received date</small></span><input name="receivedDate" placeholder="DD.MM.YYYY" inputmode="numeric" data-date="day"><span class="hint" data-hint="receivedDate"></span></label>
+        <span></span>
+        <label>प्रेषक <small>From</small><input name="from" list="dl-from"></label>
+        <label>प्राप्तकर्ता <small>To</small><input name="to" list="dl-to"></label>
+        <label class="span2">विषय <small>Subject</small><input name="subject"></label>
+        <label class="span2">मामला <small>Matter tags — लिखकर Enter / type and press Enter</small>
+          <div class="chips" id="matter-chips"><input id="matter-input" list="dl-matters" placeholder="जैसे: भू-अर्जन ..."></div>
+        </label>
+        <label class="span2">प्रसंग <small>References (free text)</small><textarea name="refsText" rows="1"></textarea></label>
+        <div class="span2 picker-field">
+          <span class="lbl">प्रसंग पत्र जोड़ें <small>Link referenced entries</small></span>
+          <div class="picker" id="ref-picker"></div>
+        </div>
+        <label class="span2">सार <small>Summary — राशि, रकबा, स्तर आदि / amounts, areas, levels</small><textarea name="summary" rows="3"></textarea></label>
+        <label class="span2">कार्रवाई <small>Action required</small><input name="action"></label>
+        <label>समय-सीमा <small>Due date</small><input name="dueDate" placeholder="DD.MM.YYYY" inputmode="numeric" data-date="day"><span class="hint" data-hint="dueDate"></span></label>
+        <label>स्थिति <small>Status</small><select name="status"></select></label>
+        <div class="span2 picker-field">
+          <span class="lbl">उत्तर <small>Reply — इस पत्र का उत्तर / the entry that replied to this</small></span>
+          <div class="picker" id="reply-picker"></div>
+        </div>
+        <label class="span2">फ़ाइल स्थान <small>File location — संचिका सं., पंजी पृष्ठ, या PC path</small><input name="fileLocation" placeholder="संचिका सं. / C:\Users\...\letter.pdf"></label>
+        <label class="span2">अभ्युक्ति <small>Remarks</small><textarea name="remarks" rows="2"></textarea></label>
+      </div>
+      <p class="muted small">Enter = अगला खाना / next field &nbsp;·&nbsp; Shift+Enter = नई पंक्ति / new line &nbsp;·&nbsp; Ctrl+S = सहेजें / save</p>
+      <div class="actions sticky-actions">
+        <button type="submit" id="btn-save">सहेजें / Save</button>
+        <button type="button" id="btn-save-new">सहेजें व नया / Save &amp; add another</button>
+        <button type="button" id="btn-duplicate" class="secondary">प्रतिलिपि बनाएँ / Duplicate</button>
+        <button type="button" id="btn-cancel" class="secondary">रद्द / Cancel</button>
+        <span class="grow"></span>
+        <button type="button" id="btn-delete" class="danger" hidden>हटाएँ / Delete</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- PENDING -->
+  <section id="screen-pending" class="screen" hidden>
+    <h2>लंबित कार्य <small>Pending actions</small></h2>
+    <div id="pending-list"></div>
+  </section>
+
+  <!-- CHRONOLOGY -->
+  <section id="screen-chronology" class="screen" hidden>
+    <h2>घटनाक्रम <small>Chronology</small></h2>
+    <div class="panel">
+      <div class="grid">
+        <label>स्रोत <small>Source</small>
+          <select id="ch-source">
+            <option value="matter">मामला चुनें / A matter</option>
+            <option value="filter">पंजी का वर्तमान खोज/फ़िल्टर परिणाम / Current register search &amp; filters</option>
+          </select>
+        </label>
+        <label id="ch-matter-wrap">मामला <small>Matter</small><select id="ch-matter"></select></label>
+        <label>दिनांक से <small>From date</small><input id="ch-dfrom" placeholder="DD.MM.YYYY" inputmode="numeric"></label>
+        <label>दिनांक तक <small>To date</small><input id="ch-dto" placeholder="DD.MM.YYYY" inputmode="numeric"></label>
+        <label class="span2">शीर्षक <small>Title (after "घटनाक्रम —")</small><input id="ch-title"></label>
+        <label class="span2">कार्यालय पंक्ति <small>Office line</small><input id="ch-office"></label>
+        <fieldset class="span2">
+          <legend>स्तम्भ <small>Columns</small></legend>
+          <div id="ch-cols" class="inline-checks"></div>
+        </fieldset>
+        <fieldset class="span2 inline-checks">
+          <legend>विकल्प <small>Options</small></legend>
+          <label><input type="checkbox" id="ch-summary" checked> सार शामिल करें / Include summaries</label>
+          <label><input type="radio" name="ch-orient" value="portrait" checked> खड़ा / Portrait</label>
+          <label><input type="radio" name="ch-orient" value="landscape"> आड़ा / Landscape</label>
+        </fieldset>
+      </div>
+      <div class="actions">
+        <button type="button" id="ch-print">प्रिंट / PDF</button>
+        <button type="button" id="ch-docx">Word (.docx)</button>
+        <button type="button" id="ch-xlsx">Excel (.xlsx)</button>
+        <button type="button" id="ch-copy" class="secondary">तालिका कॉपी / Copy table</button>
+      </div>
+    </div>
+    <div id="ch-preview" class="doc-preview"></div>
+  </section>
+
+  <!-- ANNEXURE -->
+  <section id="screen-annexure" class="screen" hidden>
+    <h2>अनुलग्नक सूची <small>Annexure list</small></h2>
+    <p class="muted">पंजी में पत्रों को ☑ चुनकर "चयनित → अनुलग्नक" दबाएँ, या नीचे खोजकर जोड़ें। / Tick entries in the Register and press "Selected → Annexure", or add them below.</p>
+    <div class="panel">
+      <div class="picker" id="annex-picker"></div>
+      <div class="toolbar small">
+        <label>आरम्भ संख्या / Start at <input id="annex-start" type="number" min="1" value="1" class="narrow"></label>
+        <button type="button" id="annex-sort" class="secondary">दिनांक क्रम में लगाएँ / Sort by date</button>
+        <button type="button" id="annex-clear" class="secondary">सूची खाली करें / Clear list</button>
+      </div>
+      <ol id="annex-items" class="annex-items"></ol>
+      <div class="actions">
+        <button type="button" id="annex-copy">कॉपी / Copy</button>
+        <button type="button" id="annex-print">प्रिंट / Print</button>
+        <button type="button" id="annex-docx">Word (.docx)</button>
+      </div>
+    </div>
+    <div id="annex-preview" class="doc-preview"></div>
+  </section>
+
+  <!-- IMPORT -->
+  <section id="screen-import" class="screen" hidden>
+    <h2>Excel / CSV से आयात <small>Import from Excel or CSV</small></h2>
+    <div class="panel">
+      <p>1. फ़ाइल चुनें / Choose a file (.xlsx, .xls, .csv)</p>
+      <input type="file" id="imp-file" accept=".xlsx,.xls,.csv,.txt,.ods">
+      <div id="imp-step2" hidden>
+        <div class="grid">
+          <label id="imp-sheet-wrap">शीट / Sheet<select id="imp-sheet"></select></label>
+          <label>शीर्ष पंक्ति / Header row<select id="imp-header"><option value="1">पहली पंक्ति में शीर्षक हैं / First row has headings</option><option value="0">शीर्षक नहीं / No headings</option></select></label>
+          <label>प्रकार खाली हो तो / If type is blank<select id="imp-deftype"></select></label>
+          <label>सभी पर मामला जोड़ें / Add matter to all<input id="imp-matter" list="dl-matters"></label>
+        </div>
+        <p>2. स्तम्भ मिलाएँ / Match the columns <small class="muted">(दिनांक हमेशा दिन.माह.वर्ष / dates are always day before month)</small></p>
+        <div class="table-wrap"><table id="imp-map" class="mapping"></table></div>
+        <p>3. पूर्वावलोकन / Preview</p>
+        <div id="imp-preview"></div>
+        <div class="actions"><button type="button" id="imp-go">आयात करें / Import</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DATA & BACKUP -->
+  <section id="screen-data" class="screen" hidden>
+    <h2>बैकअप व डेटा <small>Backup &amp; data</small></h2>
+    <div class="cards">
+      <div class="panel">
+        <h3>बैकअप <small>Backup</small></h3>
+        <p id="backup-status" class="muted"></p>
+        <p>सारा डेटा इसी कंप्यूटर/फ़ोन के ब्राउज़र में रहता है। नियमित रूप से बैकअप फ़ाइल डाउनलोड करें और पेन-ड्राइव या OneDrive में रखें।<br><small class="muted">All data stays in this browser on this device. Download a backup file regularly and keep it on a pen drive or OneDrive.</small></p>
+        <div class="actions">
+          <button type="button" id="btn-backup">बैकअप डाउनलोड करें / Download backup</button>
+          <label class="button secondary">बैकअप से पुनःस्थापित / Restore from backup<input type="file" id="restore-file" accept=".json,application/json" hidden></label>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>फ़ाइल में डेटा रखें <small>Keep data in a file</small></h3>
+        <div id="filesync"></div>
+      </div>
+      <div class="panel">
+        <h3>निर्यात <small>Export</small></h3>
+        <div class="actions">
+          <button type="button" id="btn-xlsx" class="secondary">Excel (.xlsx)</button>
+          <button type="button" id="btn-csv" class="secondary">CSV</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>नमूना प्रविष्टियाँ <small>Sample entries</small></h3>
+        <p class="muted">आज़माने के लिए काल्पनिक प्रविष्टियाँ / Fictional entries to try the tool.</p>
+        <div class="actions">
+          <button type="button" id="btn-samples" class="secondary">नमूना जोड़ें / Load samples</button>
+          <button type="button" id="btn-unsamples" class="secondary">नमूना हटाएँ / Remove samples</button>
+        </div>
+      </div>
+      <div class="panel span-all">
+        <h3>मामलों की सूची <small>Matter tags — rename or merge</small></h3>
+        <p class="muted small">नाम बदलकर किसी मौजूदा मामले का नाम लिखने पर दोनों मिल जाते हैं। / Renaming to an existing matter merges the two.</p>
+        <div id="matters-list"></div>
+      </div>
+      <div class="panel span-all">
+        <h3>सेटिंग <small>Settings</small></h3>
+        <label>कार्यालय पंक्ति (घटनाक्रम हेतु) / Office line for chronology<input id="set-office"></label>
+        <p id="storage-info" class="muted small"></p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<datalist id="dl-from"></datalist>
+<datalist id="dl-to"></datalist>
+<datalist id="dl-matters"></datalist>
+
+<dialog id="dialog">
+  <form method="dialog">
+    <h3 id="dlg-title"></h3>
+    <div id="dlg-body"></div>
+    <div class="actions" id="dlg-actions"></div>
+  </form>
+</dialog>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="print-area"></div>
+
+<script src="vendor/xlsx.full.min.js"></script>
+<script src="js/core.js"></script>
+<script src="js/docx.js"></script>
+<script src="js/db.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

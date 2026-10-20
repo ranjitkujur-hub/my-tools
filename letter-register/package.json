@@ -1,0 +1,15 @@
+{
+  "name": "letter-register",
+  "version": "1.0.0",
+  "description": "पत्र पंजी एवं घटनाक्रम / Letter Register & Chronology (static web tool)",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "vendor": "cp node_modules/xlsx/dist/xlsx.full.min.js vendor/"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@fontsource/noto-sans-devanagari": "^5.3.0",
+    "xlsx": "^0.18.5"
+  },
+  "private": true
+}
