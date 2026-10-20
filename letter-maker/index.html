@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>पत्र निर्माता / Hindi Letter Maker</title>
+<link rel="stylesheet" href="vendor/fonts/fonts.css">
+<link rel="stylesheet" href="css/app.css">
+<style id="page-style"></style>
+</head>
+<body>
+<header class="topbar no-print">
+  <a class="home" href="../index.html" title="सभी टूल / All tools">⌂</a>
+  <h1>पत्र निर्माता <span>Hindi Letter Maker</span></h1>
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="editor" class="active">पत्र <small>Letter</small></button>
+    <button role="tab" data-tab="saved">सहेजे पत्र <small>Saved</small></button>
+    <button role="tab" data-tab="converter">परिवर्तक <small>Converter</small></button>
+    <button role="tab" data-tab="settings">सेटिंग <small>Settings</small></button>
+  </nav>
+</header>
+
+<main class="no-print">
+  <!-- ============ LETTER EDITOR ============ -->
+  <section id="tab-editor" class="tab-panel active">
+    <div class="toolbar">
+      <button id="btn-new" title="नया पत्र / New letter">＋ नया <small>New</small></button>
+      <button id="btn-save" class="primary">💾 सहेजें <small>Save</small></button>
+      <button id="btn-print">🖨 प्रिंट / PDF <small>Print</small></button>
+      <button id="btn-docx-u">⬇ Word (यूनिकोड) <small>Unicode</small></button>
+      <button id="btn-docx-k">⬇ Word (कृतिदेव) <small>Kruti Dev</small></button>
+      <button id="btn-copy-u">⧉ कॉपी यूनिकोड <small>Copy Unicode</small></button>
+      <button id="btn-copy-k">⧉ कॉपी कृतिदेव <small>Copy Kruti Dev</small></button>
+      <span id="save-status" class="status"></span>
+    </div>
+    <div class="mobile-switch">
+      <button data-pane="form" class="active">संपादन / Edit</button>
+      <button data-pane="preview">पूर्वावलोकन / Preview</button>
+    </div>
+
+    <div class="editor-grid">
+      <form id="letter-form" class="form-pane" autocomplete="off" onsubmit="return false">
+        <fieldset>
+          <legend>नमूना / Template</legend>
+          <div class="row">
+            <select id="template-select" aria-label="Template"></select>
+            <button type="button" id="btn-apply-template">लागू करें / Apply</button>
+            <button type="button" id="btn-save-template">नमूना सहेजें / Save as template</button>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>पत्र शीर्ष / Letterhead</legend>
+          <textarea data-f="letterhead" rows="3"></textarea>
+        </fieldset>
+
+        <fieldset>
+          <legend>पत्रांक एवं दिनांक / Letter no. and date</legend>
+          <div class="row">
+            <label class="grow">पत्रांक / Letter no.<input data-f="number" type="text" placeholder="जैसे 123 या 45/जल"></label>
+            <label>दिनांक / Date<input data-f="date" type="date"></label>
+          </div>
+          <label class="check"><input data-f="blankNumberDate" type="checkbox"> हाथ से भरने हेतु खाली छोड़ें / leave blank for handwriting</label>
+          <label class="check"><input data-f="devanagariDigits" type="checkbox"> देवनागरी अंक (१२.०८.२०२६) / Devanagari digits</label>
+        </fieldset>
+
+        <fieldset>
+          <legend>प्रेषक / From</legend>
+          <label class="check"><input data-f="showSender" type="checkbox"> प्रेषक दिखाएँ / show sender</label>
+          <textarea data-f="sender" rows="2"></textarea>
+        </fieldset>
+
+        <fieldset>
+          <legend>सेवा में / To</legend>
+          <div class="row">
+            <select id="addressee-select" aria-label="Addressee list"></select>
+            <button type="button" id="btn-add-addressee" title="इस पते को सूची में जोड़ें">＋ सूची में / Add to list</button>
+          </div>
+          <textarea data-f="addressee" rows="3"></textarea>
+        </fieldset>
+
+        <fieldset>
+          <legend>विषय / Subject</legend>
+          <textarea data-f="subject" rows="2"></textarea>
+          <label>प्रसंग / Reference <small>(वैकल्पिक / optional; एक पंक्ति में एक / one per line)</small>
+            <textarea data-f="reference" rows="2"></textarea></label>
+          <div class="row reminder-only">
+            <label class="grow">पूर्व पत्रांक / Earlier letter no.<input data-f="prevNumber" type="text"></label>
+            <label>पूर्व दिनांक / Earlier date<input data-f="prevDate" type="date"></label>
+          </div>
+          <p class="hint reminder-only">प्रसंग में <code>{पूर्व पत्रांक}</code> और <code>{पूर्व दिनांक}</code> अपने आप भर जाते हैं। / These placeholders are filled in automatically.</p>
+        </fieldset>
+
+        <fieldset>
+          <legend>पत्र का मुख्य भाग / Body</legend>
+          <div class="row">
+            <label>सम्बोधन / Salutation
+              <select data-f="salutation">
+                <option>महाशय,</option><option>महोदय,</option><option>महोदया,</option>
+              </select></label>
+            <label class="check"><input data-f="numberParas" type="checkbox"> कंडिका क्रमांक (1., 2., ...) / number paragraphs</label>
+          </div>
+          <textarea data-f="body" id="body-text" rows="9" placeholder="हर नई पंक्ति एक नया अनुच्छेद है। / Each new line is a new paragraph."></textarea>
+          <div class="phrases">
+            <span>वाक्यांश जोड़ें / Insert phrase:</span>
+            <div id="phrase-list"></div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>संलग्न / Enclosures</legend>
+          <textarea data-f="enclosure" rows="2"></textarea>
+          <p class="hint">एक पंक्ति = जैसा लिखा है। कई पंक्तियाँ = क्रमांकित सूची। / One line is printed as is; several lines become a numbered list.</p>
+        </fieldset>
+
+        <fieldset>
+          <legend>हस्ताक्षर / Signature</legend>
+          <label>समापन / Closing<input data-f="closing" type="text"></label>
+          <label>नाम (वैकल्पिक) / Name (optional)<input data-f="signName" type="text"></label>
+          <label>पदनाम / Designation<textarea data-f="signature" rows="2"></textarea></label>
+        </fieldset>
+
+        <fieldset>
+          <legend>प्रतिलिपि / Copy to (endorsement)</legend>
+          <label class="check"><input data-f="copyEnabled" type="checkbox"> प्रतिलिपि भाग जोड़ें / add endorsement</label>
+          <div class="copy-only">
+            <div class="row">
+              <label class="grow">ज्ञापांक / Memo no.<input data-f="copyMemoNo" type="text" placeholder="खाली = बिंदु रेखा / blank = dotted"></label>
+              <label>दिनांक / Date<input data-f="copyMemoDate" type="date"></label>
+            </div>
+            <div class="row">
+              <select id="copy-add-select" aria-label="Add copy recipient"></select>
+            </div>
+            <label>प्राप्तकर्ता (एक पंक्ति में एक) / Recipients, one per line<textarea data-f="copyRecipients" rows="3"></textarea></label>
+            <label>अंत में / Ending<input data-f="copySuffix" type="text"></label>
+          </div>
+        </fieldset>
+      </form>
+
+      <div class="preview-pane">
+        <div class="preview-scroll" id="preview-scroll">
+          <div class="page-wrap" id="page-wrap">
+            <div class="page letter" id="preview"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SAVED LETTERS ============ -->
+  <section id="tab-saved" class="tab-panel">
+    <div class="row">
+      <input id="search" type="search" class="grow" placeholder="खोजें: विषय, पत्रांक, दिनांक, प्राप्तकर्ता / Search: subject, letter no., date, addressee">
+    </div>
+    <div id="saved-list" class="saved-list"></div>
+  </section>
+
+  <!-- ============ CONVERTER ============ -->
+  <section id="tab-converter" class="tab-panel">
+    <p class="hint">कृतिदेव 010 और 040 का एन्कोडिंग एक ही है। / Kruti Dev 010 and 040 use the same encoding.</p>
+    <div class="conv-grid">
+      <div>
+        <h3>यूनिकोड / Unicode</h3>
+        <textarea id="conv-u" rows="12" placeholder="यहाँ यूनिकोड हिन्दी लिखें या पेस्ट करें"></textarea>
+        <div class="row">
+          <button id="conv-to-k" class="primary">कृतिदेव में बदलें → / To Kruti Dev</button>
+          <button id="conv-copy-u">⧉ कॉपी / Copy</button>
+        </div>
+      </div>
+      <div>
+        <h3>कृतिदेव / Kruti Dev</h3>
+        <textarea id="conv-k" class="kruti-text" rows="12" placeholder="Kruti Dev text"></textarea>
+        <div class="row">
+          <button id="conv-to-u" class="primary">← यूनिकोड में बदलें / To Unicode</button>
+          <button id="conv-copy-k">⧉ कॉपी / Copy</button>
+        </div>
+        <p class="hint" id="kruti-font-note"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SETTINGS ============ -->
+  <section id="tab-settings" class="tab-panel">
+    <form id="settings-form" class="settings" onsubmit="return false">
+      <fieldset>
+        <legend>कार्यालय / Office presets <small>(नए पत्रों में / used for new letters)</small></legend>
+        <label>पत्र शीर्ष / Letterhead<textarea data-s="letterhead" rows="3"></textarea></label>
+        <label>प्रेषक / Sender<textarea data-s="sender" rows="2"></textarea></label>
+        <label>सम्बोधन / Salutation
+          <select data-s="salutation"><option>महाशय,</option><option>महोदय,</option><option>महोदया,</option></select></label>
+        <label>संलग्न / Enclosure<input data-s="enclosure" type="text"></label>
+        <label>प्रतिलिपि का अंत / Copy line ending<input data-s="copySuffix" type="text"></label>
+        <label class="check"><input data-s="devanagariDigits" type="checkbox"> देवनागरी अंक / Devanagari digits by default</label>
+      </fieldset>
+
+      <fieldset>
+        <legend>हस्ताक्षर / Signature</legend>
+        <label>समापन / Closing<input data-s="closing" type="text"></label>
+        <label>नाम (वैकल्पिक) / Name (optional)<input data-s="signName" type="text"></label>
+        <label>पदनाम / Designation<textarea data-s="signature" rows="2"></textarea></label>
+      </fieldset>
+
+      <fieldset>
+        <legend>प्राप्तकर्ता सूची / Addressees</legend>
+        <div id="addressee-editor" class="list-editor"></div>
+        <button type="button" id="btn-new-addressee">＋ नया / Add</button>
+      </fieldset>
+
+      <fieldset>
+        <legend>वाक्यांश / Phrases</legend>
+        <div id="phrase-editor" class="list-editor"></div>
+        <button type="button" id="btn-new-phrase">＋ नया / Add</button>
+      </fieldset>
+
+      <fieldset>
+        <legend>मेरे नमूने / My templates</legend>
+        <div id="template-editor" class="list-editor"></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>फ़ॉन्ट एवं पृष्ठ / Fonts and page</legend>
+        <label>कृतिदेव फ़ॉन्ट / Kruti Dev font name
+          <select id="kruti-font-select"></select></label>
+        <label>अन्य नाम / Other font name<input data-s="krutiFont" type="text"></label>
+        <p class="hint" id="kruti-detect-note"></p>
+        <label>Word में कृतिदेव का आकार (pt) / Kruti Dev size in Word<input data-s="krutiFontSize" type="number" min="8" max="30" step="0.5"></label>
+        <label>यूनिकोड Word फ़ॉन्ट / Unicode Word font
+          <select data-s="unicodeFont"><option>Nirmala UI</option><option>Mangal</option><option>Kokila</option><option>Aparajita</option><option>Noto Sans Devanagari</option></select></label>
+        <div class="row">
+          <label>अक्षर आकार (pt) / Font size<input data-s="fontSize" type="number" min="8" max="24" step="0.5"></label>
+          <label>पंक्ति अंतर / Line spacing<input data-s="lineHeight" type="number" min="1" max="2.5" step="0.05"></label>
+        </div>
+        <div class="row">
+          <label>ऊपर / Top (mm)<input data-s="margins.top" type="number" min="5" max="60"></label>
+          <label>नीचे / Bottom (mm)<input data-s="margins.bottom" type="number" min="5" max="60"></label>
+          <label>बाएँ / Left (mm)<input data-s="margins.left" type="number" min="5" max="60"></label>
+          <label>दाएँ / Right (mm)<input data-s="margins.right" type="number" min="5" max="60"></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>बैकअप / Backup</legend>
+        <p class="hint">सारा डेटा केवल इसी ब्राउज़र में रहता है। समय-समय पर बैकअप फ़ाइल डाउनलोड करें। / All data stays only in this browser. Download a backup file from time to time.</p>
+        <div class="row">
+          <button type="button" id="btn-backup" class="primary">⬇ बैकअप डाउनलोड / Download backup</button>
+          <button type="button" id="btn-restore">⬆ बैकअप से वापस लाएँ / Restore</button>
+          <input type="file" id="restore-file" accept=".json,application/json" hidden>
+        </div>
+        <button type="button" id="btn-reset-settings" class="danger">सेटिंग डिफ़ॉल्ट करें / Reset settings to defaults</button>
+      </fieldset>
+    </form>
+  </section>
+</main>
+
+<div id="print-area" class="letter print-only"></div>
+<div id="toast" class="toast no-print" role="status" aria-live="polite"></div>
+
+<script src="vendor/docx.iife.js"></script>
+<script src="js/krutidev.js"></script>
+<script src="js/letter-model.js"></script>
+<script src="js/store.js"></script>
+<script src="js/docx-export.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

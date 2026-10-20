@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>मेरे टूल / My Tools</title>
+<style>
+  :root { --bg: #eef1f5; --card: #fff; --ink: #1d2733; --muted: #5d6b7a; --accent: #1f5fa8; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Nirmala UI', 'Mangal', 'Noto Sans Devanagari', system-ui, sans-serif; background: var(--bg); color: var(--ink); }
+  header { background: #173d6b; color: #fff; padding: 20px 16px; text-align: center; }
+  header h1 { margin: 0; font-size: 1.5rem; }
+  header p { margin: 4px 0 0; opacity: 0.85; }
+  main { max-width: 900px; margin: 24px auto; padding: 0 16px; display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  a.card { display: block; background: var(--card); border-radius: 10px; padding: 18px; text-decoration: none; color: inherit; border: 1px solid #d5dce4; }
+  a.card:hover { border-color: var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  .card h2 { margin: 0 0 4px; font-size: 1.2rem; color: var(--accent); }
+  .card .en { font-weight: 400; color: var(--muted); font-size: 0.9rem; }
+  .card p { margin: 8px 0 0; color: var(--muted); font-size: 0.95rem; line-height: 1.5; }
+  footer { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 16px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>मेरे कार्यालय टूल</h1>
+  <p>My office tools — सारा डेटा केवल आपके ब्राउज़र में रहता है / all data stays in your browser</p>
+</header>
+<main>
+  <a class="card" href="./letter-maker/index.html">
+    <h2>पत्र निर्माता <span class="en">Letter Maker</span></h2>
+    <p>सरकारी हिन्दी पत्र बनाएँ, प्रिंट करें, Word (यूनिकोड / कृतिदेव) में डाउनलोड करें।<br>Write official Hindi letters; print or download as Word.</p>
+  </a>
+  <a class="card" href="./letter-register/index.html">
+    <h2>पत्र पंजी एवं घटनाक्रम <span class="en">Letter Register &amp; Chronology</span></h2>
+    <p>आवक-जावक पत्रों की पंजी और तिथिवार घटनाक्रम।<br>Register of letters and datewise chronologies.</p>
+  </a>
+  <a class="card" href="./health-tracker/index.html">
+    <h2>किडनी स्वास्थ्य रिकॉर्ड <span class="en">Kidney Health Tracker</span></h2>
+    <p>जाँच परिणाम, दवाइयाँ और डॉक्टर विज़िट का रिकॉर्ड।<br>Blood test results, medicines and doctor visits.</p>
+  </a>
+</main>
+<footer>कोई इंटरनेट डेटा नहीं भेजा जाता / Nothing is sent over the internet</footer>
+</body>
+</html>
