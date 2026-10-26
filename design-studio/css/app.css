@@ -78,7 +78,7 @@ main { flex: 1; min-width: 0; padding: 16px; }
 .inputs { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
 .inputs .sec { font-size: .9rem; color: var(--brand); border-bottom: 1px solid var(--line); padding-bottom: 3px; margin: 14px 0 8px; }
 .field { display: block; margin: 0 0 9px; }
-.field[hidden] { display: none; }
+.field[hidden], .sec[hidden] { display: none; }
 .field .lbl { display: block; font-size: .88rem; margin-bottom: 2px; }
 .field .lbl .en { font-size: .82rem; }
 .field .ctl { display: flex; align-items: stretch; }

@@ -41,7 +41,7 @@
   // Points every `interval` metres, plus the end point.
   function chainagePoints(pts, geographic, interval, ch0) {
     var chs = chainages(pts, geographic, ch0), out = [], start = chs[0], end = chs[chs.length - 1];
-    var first = Math.ceil(start / interval - 1e-9) * interval;
+    var first = Math.ceil(start / interval - 1e-9) * interval + 0;   // + 0 turns -0 into 0
     if (first - start > 1e-6) out.push({ ch: start, xy: pts[0].slice(0, 2) });
     for (var c = first; c <= end + 1e-6; c += interval) out.push({ ch: c, xy: pointAt(pts, chs, c) });
     if (end - out[out.length - 1].ch > 1e-6) out.push({ ch: end, xy: pts[pts.length - 1].slice(0, 2) });

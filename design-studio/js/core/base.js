@@ -117,7 +117,7 @@
     String(text || '').split(/\r?\n/).forEach(function (line) {
       line = line.trim();
       if (!line || line.charAt(0) === '#') return;
-      var cells = line.split(/[\t,;]+|\s+/).map(num);
+      var cells = line.split(/[\s,;]+/).map(num);
       if (cells.length < minCols) return;
       for (var i = 0; i < minCols; i++) if (!isFinite(cells[i])) return;
       rows.push(cells.filter(function (c) { return isFinite(c); }));

@@ -91,7 +91,7 @@
 
   /* ---------- module page ---------- */
   function fieldHTML(i) {
-    if (i.sec) return '<h3 class="sec">' + esc(i.sec) + '</h3>';
+    if (i.sec) return '<h3 class="sec"' + (i.show ? ' data-sec="' + esc(i.sec) + '"' : '') + '>' + esc(i.sec) + '</h3>';
     var lbl = '<span class="lbl">' + (i.hi ? esc(i.hi) + ' <span class="en">/ ' + esc(i.en) + '</span>' : esc(i.en)) + '</span>';
     var ctl, unit = i.unit ? '<span class="unit">' + esc(i.unit) + '</span>' : '';
     var id = 'f-' + i.key;
@@ -185,7 +185,12 @@
     var v = readForm(page);
     state.v = v;
     // show / hide conditional inputs
+    var heads = $$('h3.sec[data-sec]');
     page.inputs.forEach(function (i) {
+      if (i.sec && i.show) {
+        heads.forEach(function (h) { if (h.dataset.sec === i.sec) h.hidden = !i.show(v); });
+        return;
+      }
       if (!i.key) return;
       var el = $('.field[data-key="' + i.key + '"]');
       if (el) el.hidden = !!(i.show && !i.show(v));
@@ -265,7 +270,7 @@
     var list = [];
     try { list = page.exports ? page.exports(v, rep) || [] : []; } catch (e) { list = []; rep.warn('Export failed: ' + e.message); }
     state.exports = list;
-    var guide = page.guide || [];
+    var guide = (typeof page.guide === 'function' ? page.guide(v, rep) : page.guide) || [];
     if (!list.length && !guide.length) { el.hidden = true; el.innerHTML = ''; return; }
     el.hidden = false;
     var h = ['<h2>' + bi('सॉफ़्टवेयर निर्यात', 'Software exports') + '</h2>'];
