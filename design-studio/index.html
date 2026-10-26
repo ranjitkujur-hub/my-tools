@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; worker-src 'self'; manifest-src 'self'">
+  <title>डिज़ाइन एवं ड्रॉइंग स्टूडियो / Design &amp; Drawing Studio</title>
+  <meta name="description" content="Preliminary design calculations, design notes and dimensioned drawings for canals, dams, hydraulic structures, bridges and culverts. Works offline.">
+  <meta name="theme-color" content="#173d6b">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/app.css">
+  <style id="page-style"></style>
+</head>
+<body>
+  <header class="top">
+    <button class="icon-btn" id="menu-btn" type="button" aria-label="मेनू / Menu" aria-expanded="false">☰</button>
+    <a class="brand" href="#/">डिज़ाइन एवं ड्रॉइंग स्टूडियो <span class="en">Design &amp; Drawing Studio</span></a>
+    <nav class="quick">
+      <a href="#/projects">परियोजनाएँ <span class="en">Projects</span></a>
+      <a href="#/guide">सॉफ़्टवेयर गाइड <span class="en">Software guide</span></a>
+      <a href="#/settings">सेटिंग <span class="en">Settings</span></a>
+    </nav>
+  </header>
+  <p class="disclaimer" id="disclaimer"></p>
+  <div class="layout">
+    <nav class="side" id="side" aria-label="Modules"></nav>
+    <main id="view" tabindex="-1"><p class="loading">लोड हो रहा है… / Loading…</p></main>
+  </div>
+  <footer class="foot"><span id="foot-disc"></span><br><a href="../index.html">← सभी टूल / All tools</a> · कोई डेटा इंटरनेट पर नहीं भेजा जाता / Nothing is sent over the internet</footer>
+  <div id="print-root" aria-hidden="true"></div>
+  <dialog id="dlg"><form method="dialog" id="dlg-form"></form></dialog>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <noscript><p>इस ऐप के लिए JavaScript चालू करें / Please enable JavaScript.</p></noscript>
+
+  <script src="js/core/base.js"></script>
+  <script src="js/core/drawing.js"></script>
+  <script src="js/core/svg.js"></script>
+  <script src="js/core/dxf.js"></script>
+  <script src="js/core/csv.js"></script>
+  <script src="js/core/staad.js"></script>
+  <script src="js/core/hecras.js"></script>
+  <script src="js/core/geo.js"></script>
+  <script src="js/core/store.js"></script>
+  <script src="js/core/note.js"></script>
+  <script src="js/modules/hydrology.js"></script>
+  <script src="js/modules/canal.js"></script>
+  <script src="js/modules/weir.js"></script>
+  <script src="js/modules/basin.js"></script>
+  <script src="js/modules/spillway.js"></script>
+  <script src="js/modules/falls.js"></script>
+  <script src="js/modules/regulator.js"></script>
+  <script src="js/modules/crossdrainage.js"></script>
+  <script src="js/modules/gravitydam.js"></script>
+  <script src="js/modules/earthdam.js"></script>
+  <script src="js/modules/bridge.js"></script>
+  <script src="js/modules/rcc.js"></script>
+  <script src="js/modules/retwall.js"></script>
+  <script src="js/modules/software.js"></script>
+  <script src="js/guide.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

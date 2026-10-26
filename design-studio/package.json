@@ -1,0 +1,11 @@
+{
+  "name": "design-studio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "डिज़ाइन एवं ड्रॉइंग स्टूडियो / Design & Drawing Studio (static web app, no build step)",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test",
+    "smoke": "node tests/smoke.browser.js"
+  }
+}
