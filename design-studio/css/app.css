@@ -91,6 +91,8 @@ main { flex: 1; min-width: 0; padding: 16px; }
 .field.bad input { border-color: var(--nok); background: var(--nok-bg); }
 .field.check { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .field.check .lbl { display: inline; margin: 0; }
+.field.check input { width: 20px; height: 20px; min-height: 0; flex: none; }
+.only-narrow { display: none; }
 .outputs { display: grid; gap: 14px; min-width: 0; }
 .panel { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; min-width: 0; }
 .panel[hidden] { display: none; }
@@ -164,6 +166,7 @@ dialog input { display: block; width: 100%; border: 1px solid #b9c4d0; border-ra
 /* phone */
 @media (max-width: 999px) {
   .mod-grid { grid-template-columns: 1fr; }
+  .only-narrow { display: inline-block; }
 }
 @media (max-width: 760px) {
   .top .quick { display: none; }

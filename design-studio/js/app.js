@@ -146,7 +146,8 @@
       '<button type="button" data-act="save" class="primary">सहेजें <span class="en">Save</span></button>' +
       '<button type="button" data-act="note">डिज़ाइन नोट <span class="en">Design note (A4)</span></button>' +
       '<button type="button" data-act="csv-all">CSV <span class="en">all tables</span></button>' +
-      '<button type="button" data-act="reset">डिफ़ॉल्ट <span class="en">Defaults</span></button></div>');
+      '<button type="button" data-act="reset">डिफ़ॉल्ट <span class="en">Defaults</span></button>' +
+      '<button type="button" data-act="jump" class="only-narrow">परिणाम ↓ <span class="en">Results</span></button></div>');
     h.push('<p class="loaded" id="loaded" hidden></p></div>');
     h.push('<div class="mod-grid"><form class="inputs" id="inputs" autocomplete="off" novalidate><h2>' + bi('इनपुट', 'Inputs') + '</h2>' + page.inputs.map(fieldHTML).join('') + '</form>');
     h.push('<div class="outputs"><div class="panel" id="p-results"></div><div class="panel" id="p-drawing"></div>' +
@@ -372,6 +373,7 @@
       case 'export': { var x = state.exports[k]; download(x.name, x.mime || 'text/plain', x.text); break; }
       case 'reset': state.loaded = null; showLoaded(); setForm(page, B.coerce(page.inputs, {})); recalc(); break;
       case 'note': designNote(); break;
+      case 'jump': $('#p-results').scrollIntoView({ behavior: 'smooth' }); break;
       case 'save': saveDialog(); break;
     }
   }
@@ -381,7 +383,7 @@
     if (!rep) return toast('पहले इनपुट ठीक करें / Fix inputs first', true);
     var s = state.settings, d = state.loaded;
     var drs = state.drawings.map(function (dr, k) {
-      var r = DS.svg.render(dr.d, { w: 170, h: 120 });
+      var r = DS.svg.render(dr.d, { w: 236, h: 200 });   // usable ≈ 180 × 145 mm after label margins
       return { title: dr.title, svg: r.svg, scaleLabel: dr.d.nts ? 'NTS' : dr.d.scaleLabel(r.scale) + ' (on A4 portrait)', k: k };
     });
     var html = DS.note.html({
