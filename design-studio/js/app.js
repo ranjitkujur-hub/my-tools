@@ -329,9 +329,10 @@
     var root = $('#print-root');
     root.innerHTML = html;
     document.body.classList.add('printing');
-    var done = function () { document.body.classList.remove('printing'); root.innerHTML = ''; window.removeEventListener('afterprint', done); };
+    if (printHTML.done) window.removeEventListener('afterprint', printHTML.done);
+    var done = printHTML.done = function () { document.body.classList.remove('printing'); root.innerHTML = ''; window.removeEventListener('afterprint', done); printHTML.done = null; };
     window.addEventListener('afterprint', done);
-    setTimeout(function () { window.print(); setTimeout(function () { if (document.body.classList.contains('printing') && !window.matchMedia('print').matches) done(); }, 1500); }, 60);
+    setTimeout(function () { window.print(); }, 60);
   }
 
   function svgToPng(svg, wmm, hmm, name) {
