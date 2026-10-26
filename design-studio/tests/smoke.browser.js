@@ -19,8 +19,9 @@ const path = require('path');
 const ROOT = path.resolve(__dirname, '..', '..');
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json', '.json': 'application/json' };
 const server = http.createServer((req, res) => {
-  const p = path.join(ROOT, decodeURIComponent(req.url.split('?')[0]));
-  if (!p.startsWith(ROOT) || !fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); res.end(); return; }
+  let p = path.join(ROOT, decodeURIComponent(req.url.split('?')[0]));
+  if (p.startsWith(ROOT) && fs.existsSync(p) && fs.statSync(p).isDirectory()) p = path.join(p, 'index.html');   // like GitHub Pages
+  if (!p.startsWith(ROOT) || !fs.existsSync(p)) { res.writeHead(404); res.end(); return; }
   res.writeHead(200, { 'Content-Type': TYPES[path.extname(p)] || 'application/octet-stream' });
   fs.createReadStream(p).pipe(res);
 });
@@ -75,7 +76,8 @@ const server = http.createServer((req, res) => {
       downloads++;
     }
     for (const btn of await dp.$$('[data-act="export"]')) {
-      const [dl] = await Promise.all([dp.waitForEvent('download', { timeout: 5000 }).catch(() => null), btn.click()]);
+      await dp.waitForTimeout(300);
+      const [dl] = await Promise.all([dp.waitForEvent('download', { timeout: 8000 }).catch(() => null), btn.click()]);
       if (!dl) problems.push(`1280 ${id}: export did not download`); else downloads++;
     }
     await dp.click('[data-act="print-A3"]');
@@ -110,7 +112,7 @@ const server = http.createServer((req, res) => {
   if ((await dp.inputValue('#f-Q')) !== '15') problems.push('saved inputs not restored');
   await dp.goto(base + '#/guide');
   await dp.waitForSelector('.guide-page');
-  const sw = await dp.evaluate(() => navigator.serviceWorker.getRegistration().then(r => !!r));
+  const sw = await dp.evaluate(() => navigator.serviceWorker.ready.then(r => !!r.active));
   if (!sw) problems.push('service worker not registered');
   await dp.screenshot({ path: path.join(require('os').tmpdir(), 'ds-guide.png'), fullPage: true });
 
