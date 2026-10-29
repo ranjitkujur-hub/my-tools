@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; connect-src 'self'; worker-src 'self'; manifest-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#075e54">
+<title>DRIP अधिप्राप्ति सहायक / DRIP Procurement Assistant</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div id="app" class="app">
+  <header class="topbar">
+    <div class="brand"><span class="logo" aria-hidden="true">✓</span><span><b>DRIP अधिप्राप्ति सहायक</b><small>DRIP Procurement Assistant</small></span></div>
+    <span id="tier" class="tier" hidden></span>
+    <button id="lockBtn" class="icon-btn" type="button" hidden aria-label="लॉक करें / Lock">🔒</button>
+  </header>
+  <div id="update" class="update" hidden role="status"><span>नया संस्करण उपलब्ध / New version</span><button type="button" id="reloadBtn">रीलोड / Reload</button></div>
+  <nav id="nav" class="nav" hidden aria-label="मुख्य / Main"></nav>
+  <main id="main" class="main" tabindex="-1">
+    <noscript><p class="pad">यह ऐप चलाने के लिए JavaScript चालू करें। / Please enable JavaScript to use this app.</p></noscript>
+    <p class="pad muted" id="boot">लोड हो रहा है… / Loading…</p>
+  </main>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
