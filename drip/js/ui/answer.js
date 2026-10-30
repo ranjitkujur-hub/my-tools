@@ -79,6 +79,8 @@ export function answerCard(item, { kicker, onAsk } = {}) {
     disclaimer());
 }
 
+export const PHOTO_Q = 'फ़ोटो/फ़ाइल के पाठ से प्रश्न / Question from the text of a photo or file';
+
 /** Answer from the rules engine for a question that names an amount. */
 export function rulesCard(ra) {
   const rules = state.general.rules;
@@ -87,7 +89,8 @@ export function rulesCard(ra) {
   const text = () => {
     const body = [`For ${cat.en.toLowerCase()} of ${ra.res.amountText}:`, ...lines.map((l) => `- ${l.en}`)].join('\n');
     const src = [...new Set(lines.flatMap((l) => l.citations).map(sourceLabel))].slice(0, 6);
-    return buildShareText({ q: ra.question, a: body, sources: src, link: deepLink(location.href, `ask/${encodeURIComponent(ra.question)}`) });
+    // text read from a photo or a file never goes into a link
+    return buildShareText({ q: ra.origin ? PHOTO_Q : ra.question, a: body, sources: src, link: ra.origin ? deepLink(location.href, '') : deepLink(location.href, `ask/${encodeURIComponent(ra.question)}`) });
   };
   return h('article', { class: 'msg a' },
     h('div', { class: 'kicker' }, L('नियमों से उत्तर (इस राशि के लिए)', 'Answer from the rules for this amount')),
@@ -103,6 +106,31 @@ export function rulesCard(ra) {
     h('div', { class: 'note info small' }, rules.cautions.find((c) => c.id === 'eighteen-months').en),
     actions(text),
     disclaimer());
+}
+
+/** "आपके दस्तावेज़ों से / From your documents": matches in the user's own files (ranked on their own). */
+export function userSourcesBlock(list, query, { question = '', origin = null } = {}) {
+  if (!list?.length) return null;
+  const words = tokenize(query).concat(String(query).toLowerCase().split(/\s+/));
+  const share = () => buildShareText({
+    q: origin ? PHOTO_Q : question,
+    a: 'Matches in your own files on this device (not from the official material).',
+    hi: 'आपकी अपनी फ़ाइलों में मिले मिलान (आधिकारिक सामग्री से नहीं)।',
+    sources: [...new Set(list.map(userSourceLabel))],
+    link: origin ? deepLink(location.href, '') : deepLink(location.href, `ask/${encodeURIComponent(question)}`),
+  });
+  return h('div', { class: 'user-sources', 'data-user-sources': '' },
+    h('div', { class: 'small muted' }, h('b', null, L('आपके दस्तावेज़ों से', 'From your documents')), ' · ', L('आपकी फ़ाइलें, आधिकारिक सामग्री नहीं', 'your files, not the official material')),
+    h('ol', { class: 'sources' }, list.map((s) => h('li', null,
+      h('div', null, h('b', null, `📄 ${s.path || s.name}`), ` · ${s.label}`),
+      h('div', { class: 'small', html: highlight(s.snippet, words) }),
+      h('a', { class: 'btn small', href: `#/mydoc/${encodeURIComponent(s.docId)}/${s.i}` }, L('देखें', 'View'))))),
+    h('div', { class: 'row noprint' }, waButton(L('WhatsApp पर भेजें', 'Share on WhatsApp'), share, 'btn small')));
+}
+
+/** "आपकी फ़ाइल / your file: <name>, <unit>" — the file name and unit only, never its contents. */
+export function userSourceLabel(s) {
+  return `आपकी फ़ाइल / your file: ${s.name}, ${s.label}`;
 }
 
 export function sourcesBlock(sources, query) {
