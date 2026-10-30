@@ -7,6 +7,7 @@ import { misAutoDates, formatDmy, parseDmy, toIso, addDays, addBusinessDays, add
 import { formatInr, formatLakh, formatCrore, formatUsdMillion } from '../core/money.js';
 import { citeLine, disclaimer, justification, OFFICE_LABEL } from './answer.js';
 import { lsGet, lsSet } from '../store.js';
+import { planCategory } from '../core/misform.js';
 
 const MIS_CATEGORY = { works: 'Works', goods: 'Goods', ncs: 'NCS', 'cs-firm': 'Consultant Services', 'cs-ind': 'Consultant Services' };
 let plan = null;
@@ -373,6 +374,7 @@ function draw() {
     h('h1', null, L('योजना सहायक (DRIP-MIS / STEP)', 'Plan helper (DRIP-MIS / STEP)')),
     disclaimer(),
     plan.fromExample ? h('div', { class: 'office-label' }, OFFICE_LABEL) : null,
+    plan.fromPhoto ? h('div', { class: 'note info', 'data-from-photo': '' }, L('यह प्रविष्टि DRIP-MIS की फ़ोटो से पढ़ी गई है — नीचे के मान जाँचें और ज़रूरत हो तो सुधारें।', 'This entry was read from a photo of DRIP-MIS — check the values below and correct them if needed.')) : null,
     h('div', { class: 'card' },
       h('h2', null, L('श्रेणी और राशि', 'Category and amount')),
       h('label', { class: 'field', for: 'p-cat' }, h('span', null, L('श्रेणी', 'Category')), cat),
@@ -402,11 +404,46 @@ function draw() {
   renderDrafts();
 }
 
-export function renderPlan(main, { example = false } = {}) {
+// an entry read from a photo of the DRIP-MIS screen, waiting for the Plan helper to open (never in a URL)
+let pendingEntry = null;
+export function checkEntryLater(entry) {
+  pendingEntry = entry;
+}
+
+/** Load an entry read from a DRIP-MIS photo and run the checker on it, like the screenshot example. */
+function loadEntry(entry) {
+  plan = newPlan();
+  plan.fromPhoto = true;
+  plan.category = planCategory(entry) || plan.category;
+  plan.unit = 'rupee';
+  plan.amountInput = entry.amount_inr ? String(entry.amount_inr) : '';
+  for (const [k, v] of Object.entries(entry)) if (v !== undefined && v !== '') plan.mis[k] = v;
+  draw();
+  setTimeout(() => {
+    parts.runCheck?.();
+    parts.checkCard?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 0);
+}
+
+/** Fill the amount (in rupees), e.g. from a key fact of the user's document ("Check with the rules"). */
+function setAmount(inr) {
+  if (!plan) plan = newPlan();
+  if (inr >= 1e7) { plan.unit = 'crore'; plan.amountInput = String(+(inr / 1e7).toFixed(4)); } else if (inr >= 1e5) { plan.unit = 'lakh'; plan.amountInput = String(+(inr / 1e5).toFixed(4)); } else { plan.unit = 'rupee'; plan.amountInput = String(Math.round(inr)); }
+  plan.fromExample = false;
+}
+
+export function renderPlan(main, { example = false, amount = null, fromEntry = false } = {}) {
   mainEl = main;
   if (!plan) plan = newPlan();
   if (example) return loadExample();
+  if (fromEntry && pendingEntry) {
+    const e = pendingEntry;
+    pendingEntry = null;
+    return loadEntry(e);
+  }
+  if (Number.isFinite(amount) && amount > 0) setAmount(amount);
   draw();
+  if (Number.isFinite(amount) && amount > 0) toast(L('राशि भर दी गई — श्रेणी चुनें', 'Amount filled in — choose the category'));
 }
 
 export function resetPlan() {

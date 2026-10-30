@@ -1,9 +1,12 @@
 // Service worker: precaches the app shell and the encrypted data; caches pictures as they are viewed.
-// The build replaces __VERSION__ and the precache list.
-const VERSION = "1.0.0+20261029.bb80b1";
-const PRECACHE = ["./","./css/app.css","./icons/icon-192.png","./icons/icon-512.png","./icons/icon.svg","./js/core/amount.js","./js/core/checker.js","./js/core/crypto.js","./js/core/dates.js","./js/core/engine.js","./js/core/money.js","./js/core/rules.js","./js/core/search.js","./js/core/share.js","./js/core/text.js","./js/data.js","./js/main.js","./js/store.js","./js/ui/answer.js","./js/ui/ask.js","./js/ui/dom.js","./js/ui/plan.js","./js/ui/rfp.js","./js/ui/settings.js","./js/ui/sources.js","./manifest.webmanifest","./vendor/fflate.js","./index.html","./build.json","./data/keys.json","./data/general.bin","./data/office.bin"];
+// The large OCR and PDF libraries (vendor/ocr/, vendor/pdfjs/) are not precached: they are cached on
+// first use in their own bucket, which survives app updates while the libraries stay the same.
+// The build replaces __VERSION__, __LIBS__ and the precache list.
+const VERSION = "1.0.0+20261030.d2498d";
+const PRECACHE = ["./","./css/app.css","./icons/icon-192.png","./icons/icon-512.png","./icons/icon.svg","./js/core/amount.js","./js/core/checker.js","./js/core/crypto.js","./js/core/dates.js","./js/core/engine.js","./js/core/facts.js","./js/core/files/detect.js","./js/core/files/index.js","./js/core/files/office.js","./js/core/files/pdf.js","./js/core/files/plain.js","./js/core/misform.js","./js/core/money.js","./js/core/rules.js","./js/core/search.js","./js/core/share.js","./js/core/text.js","./js/core/textamounts.js","./js/core/userindex.js","./js/core/xml.js","./js/data.js","./js/imageprep.js","./js/ingest-worker.js","./js/ingest.js","./js/libs.js","./js/main.js","./js/mydocs.js","./js/ocr.js","./js/store.js","./js/ui/answer.js","./js/ui/ask.js","./js/ui/attach.js","./js/ui/dom.js","./js/ui/mydocs.js","./js/ui/plan.js","./js/ui/rfp.js","./js/ui/settings.js","./js/ui/sources.js","./js/userstore.js","./manifest.webmanifest","./vendor/fflate.js","./vendor/libs.json","./index.html","./build.json","./data/keys.json","./data/general.bin","./data/office.bin"];
 const SHELL = `drip-shell-${VERSION}`;
 const MEDIA = `drip-media-${VERSION}`;
+const LIBS = "drip-libs-27daa916d859";
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(SHELL).then((c) => c.addAll(PRECACHE.map((u) => new Request(u, { cache: 'reload' })))));
@@ -11,7 +14,7 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
-    for (const k of await caches.keys()) if (k.startsWith('drip-') && k !== SHELL && k !== MEDIA) await caches.delete(k);
+    for (const k of await caches.keys()) if (k.startsWith('drip-') && k !== SHELL && k !== MEDIA && k !== LIBS) await caches.delete(k);
     await self.clients.claim();
   })());
 });
@@ -29,6 +32,18 @@ self.addEventListener('fetch', (event) => {
   if (!url.pathname.startsWith(scope.pathname)) return;
   const rel = url.pathname.slice(scope.pathname.length);
 
+  if (rel.startsWith('vendor/ocr/') || rel.startsWith('vendor/pdfjs/')) {
+    // libraries: cache on first use (Settings can also download them ahead, into the same bucket)
+    event.respondWith((async () => {
+      const cache = await caches.open(LIBS);
+      const hit = await cache.match(req, { ignoreSearch: true });
+      if (hit) return hit;
+      const res = await fetch(req);
+      if (res.ok && res.status === 200) cache.put(req, res.clone());
+      return res;
+    })());
+    return;
+  }
   if (rel.startsWith('m/')) {
     // pictures: cache as viewed
     event.respondWith((async () => {

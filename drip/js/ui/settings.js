@@ -3,9 +3,58 @@ import { h, L, clear, toast } from './dom.js';
 import { state, allDocs } from '../data.js';
 import { prefs, lsClearAll } from '../store.js';
 import { DISCLAIMER } from './answer.js';
+import { ocrFiles, PDF_FILES, LANG_FILE, downloadSize, offlineStatus, downloadOffline, removeOffline } from '../libs.js';
+import { ocrLangs, setOcrHindi } from '../ocr.js';
+import { fmtBytes } from './attach.js';
 
 export function applyPrefs() {
   document.documentElement.style.setProperty('--fs', `${prefs.get().size}px`);
+}
+
+/** "ऑफ़लाइन के लिए OCR डाउनलोड करें / Download OCR for offline use" */
+function ocrCard() {
+  const hindi = h('input', { type: 'checkbox', checked: ocrLangs().includes('hin'), 'data-ocr-hindi': '' });
+  const size = h('p', { class: 'small' });
+  const status = h('p', { class: 'small', 'aria-live': 'polite', 'data-ocr-status': '' });
+  const dl = h('button', { class: 'btn small primary', type: 'button', 'data-btn': 'ocr-download' }, L('ऑफ़लाइन के लिए OCR डाउनलोड करें', 'Download OCR for offline use'));
+  const rm = h('button', { class: 'btn small danger', type: 'button', 'data-btn': 'ocr-remove' }, L('हटाएँ', 'Remove'));
+  const refresh = async () => {
+    const base = await downloadSize([...ocrFiles(['eng']), ...PDF_FILES]);
+    const hin = await downloadSize([LANG_FILE('hin')]);
+    clear(size).append(L('डाउनलोड का आकार', 'Download size'), `: ${base ? fmtBytes(base) : '—'} (${L('हिंदी के लिए', 'Hindi adds')} +${hin ? fmtBytes(hin) : '—'})`);
+    const st = await offlineStatus();
+    if (!st.available) { status.textContent = L('इस ब्राउज़र में ऑफ़लाइन संग्रह उपलब्ध नहीं।', 'Offline storage is not available in this browser.'); dl.disabled = rm.disabled = true; return; }
+    const ready = st.base && st.eng && st.pdf;
+    status.textContent = ready
+      ? `✓ ${L('ऑफ़लाइन उपलब्ध', 'Available offline')}: English${st.hin ? ' + हिंदी' : ''}, PDF`
+      : L('अभी ऑफ़लाइन नहीं (पहली बार उपयोग पर इंटरनेट चाहिए)।', 'Not offline yet (the first use needs the internet).');
+    status.dataset.ready = ready ? (st.hin ? 'eng+hin' : 'eng') : '';
+    rm.disabled = !(st.base || st.eng || st.hin || st.pdf);
+  };
+  hindi.addEventListener('change', () => { setOcrHindi(hindi.checked); refresh(); });
+  dl.addEventListener('click', async () => {
+    dl.disabled = true;
+    try {
+      await downloadOffline({ hindi: hindi.checked, onProgress: (i, n) => { status.textContent = L(`डाउनलोड हो रहा है… ${i}/${n}`, `Downloading… ${i}/${n}`); } });
+      toast(L('OCR अब ऑफ़लाइन भी चलेगा', 'OCR now works offline'));
+    } catch {
+      toast(L('डाउनलोड नहीं हुआ — इंटरनेट जाँचें', 'Download failed — check the connection'));
+    }
+    dl.disabled = false;
+    refresh();
+  });
+  rm.addEventListener('click', async () => {
+    if (!confirm(L('ऑफ़लाइन OCR फ़ाइलें हटाएँ? अगली बार फ़ोटो पढ़ने पर फिर डाउनलोड होंगी।', 'Remove the offline OCR files? They download again the next time a photo is read.'))) return;
+    await removeOffline();
+    toast(L('हटा दिया गया', 'Removed'));
+    refresh();
+  });
+  refresh();
+  return h('div', { class: 'card', id: 'ocr-offline' },
+    h('h2', null, `🔎 ${L('फ़ोटो पढ़ना (OCR)', 'Reading photos (OCR)')}`),
+    h('p', { class: 'small' }, L('फ़ोटो और PDF इसी डिवाइस पर पढ़े जाते हैं। ये फ़ाइलें पहली बार उपयोग पर डाउनलोड होती हैं; बिना इंटरनेट के लिए पहले से डाउनलोड करें।', 'Photos and PDFs are read on this device. These files download the first time they are used; download them ahead for use without internet.')),
+    h('label', { class: 'check' }, hindi, L('हिंदी + English पढ़ें', 'Read Hindi + English')),
+    size, status, h('div', { class: 'row' }, dl, rm));
 }
 
 export function renderSettings(main, { onLock, onForget, onLang }) {
@@ -28,12 +77,13 @@ export function renderSettings(main, { onLock, onForget, onLang }) {
       h('div', { class: 'row' },
         h('button', { class: 'btn', type: 'button', onclick: onLock }, L('अभी लॉक करें', 'Lock now')),
         h('button', { class: 'btn danger', type: 'button', onclick: () => {
-          if (!confirm(L('इस डिवाइस से कुंजियाँ, इतिहास, ड्राफ़्ट और टिक हटाएँ?', 'Remove keys, history, drafts and ticks from this device?'))) return;
+          if (!confirm(L('इस डिवाइस से कुंजियाँ, इतिहास, ड्राफ़्ट, टिक और “मेरे दस्तावेज़” हटाएँ?', 'Remove keys, history, drafts, ticks and My documents from this device?'))) return;
           lsClearAll();
           onForget();
           toast(L('डिवाइस भुला दिया गया', 'This device was forgotten'));
         } }, L('यह डिवाइस भूल जाएँ', 'Forget this device'))),
       h('p', { class: 'small muted' }, L('पासकोड कभी सहेजा नहीं जाता। “याद रखें” चुनने पर केवल न खुलने वाली (non-extractable) कुंजियाँ इसी ब्राउज़र में रहती हैं।', 'The passcode is never stored. With “Remember” on, only non-extractable keys stay in this browser.'))),
+    ocrCard(),
     h('div', { class: 'card' },
       h('h2', null, L('होम स्क्रीन पर जोड़ें', 'Add to Home screen')),
       h('ul', null,

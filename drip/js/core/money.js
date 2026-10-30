@@ -32,8 +32,9 @@ export function formatCrore(n) {
   return `₹ ${trimZeros(cr.toFixed(d))} crore`;
 }
 
-/** US$ 1.23 million */
+/** US$ 1.23 million; small amounts in dollars (US$ 499, US$ 4,250) rather than "US$ 0 million" */
 export function formatUsdMillion(usd) {
+  if (Math.abs(usd) < 10000) return `US$ ${Math.round(usd).toLocaleString('en-US')}`;
   const m = usd / 1e6;
   const d = m >= 100 ? 0 : m >= 10 ? 1 : m >= 1 ? 2 : 3;
   return `US$ ${trimZeros(m.toFixed(d))} million`;

@@ -4,6 +4,7 @@ import { state, allDocs, docMeta, unit, picture } from '../data.js';
 import { normalize } from '../core/text.js';
 import { deepLink } from '../core/share.js';
 import { OFFICE_LABEL } from './answer.js';
+import { myDocsSection } from './mydocs.js';
 
 const navigate = (hash) => { location.hash = hash; };
 
@@ -21,6 +22,8 @@ export function renderDocList(main) {
   const docs = allDocs();
   clear(main).append(h('section', { class: 'view' },
     h('h1', null, L('स्रोत', 'Sources')),
+    myDocsSection(),
+    h('h2', null, `📚 ${L('सामग्री', 'The material')}`),
     h('p', { class: 'small muted' }, L('दस्तावेज़ चुनें, फिर स्लाइड या पृष्ठ।', 'Pick a document, then a slide or page.')),
     h('ul', { class: 'list card', style: 'padding:0' }, docs.map((d) => h('li', null,
       h('a', { href: `#/doc/${encodeURIComponent(d.id)}` },

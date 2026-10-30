@@ -1,10 +1,11 @@
 // Question answering over the unlocked bundles: FAQ answers, matching sources and
 // rules-engine answers for questions that name an amount. Never writes new answer text
 // beyond the rules engine's templated lines.
-import { mergeIndexes, prepareSynonyms, search, tokenize } from './search.js';
+import { mergeIndexes, prepareSynonyms, search, tokenize, stem, idf } from './search.js';
 import { parseAmount } from './amount.js';
 import { normalize } from './text.js';
 import { classify, recommendationLines } from './rules.js';
+import { strictAmounts, explicitCategory, MIN_RULES_INR } from './textamounts.js';
 
 export const FAQ_THRESHOLD = { coverage: 0.5, score: 3 };
 
@@ -23,6 +24,60 @@ export function detectCategory(q) {
   return null;
 }
 
+/** A question is "long" (text from a photo or a selection) when it has more than this many words. */
+export const LONG_WORDS = 14;
+export const LONG_TERMS = 25;
+
+export function isLongText(text) {
+  return tokenize(text, { keepStop: true, noStem: true }).length > LONG_WORDS;
+}
+
+const KEEP_RES = [
+  /(?:₹|\brs\.?|\binr\b|\bus\s*\$|\busd\b|\$)\s*\d[\d,]*(?:\.\d+)?(?:\s*(?:lakhs?|lacs?|crores?|cr\b|millions?|mn\b|k\b))?/gi,
+  /\b\d[\d,]*(?:\.\d+)?\s*(?:lakhs?|lacs?|crores?|millions?)\b/gi,
+  /\b\d{1,3}(?:\.\d+)?\s*(?:%|percent\b)/gi,
+  /\b\d{1,4}\s*(?:calendar\s+|working\s+|business\s+)?(?:days?|weeks?|months?)\b/gi,
+];
+
+/**
+ * Turn long text into a search query: the most distinctive terms (by IDF in the material index),
+ * plus amounts, percentages and day counts kept as they are. Returns {query, terms, kept}.
+ */
+export function distinctiveQuery(index, text, max = LONG_TERMS) {
+  const seen = new Map(); // stem -> {word, tf}
+  for (const w of tokenize(text, { noStem: true })) {
+    const st = stem(w);
+    // short Latin fragments are mostly OCR debris; Devanagari words may be short
+    if (st.length < (/[a-z]/.test(st) ? 4 : 2) || /^[\d.,%$₹-]+$/.test(st) || !index.terms.has(st)) continue;
+    const cur = seen.get(st);
+    if (cur) cur.tf++;
+    else seen.set(st, { word: w, tf: 1, idf: idf(index, st) });
+  }
+  const terms = [...seen.values()].sort((a, b) => (b.idf - a.idf) || (b.tf - a.tf)).slice(0, max).map((x) => x.word);
+  const kept = [];
+  for (const re of KEEP_RES) {
+    re.lastIndex = 0;
+    for (const m of String(text).matchAll(re)) if (!kept.includes(m[0].trim())) kept.push(m[0].trim());
+  }
+  return { query: [...terms, ...kept].join(' '), terms, kept };
+}
+
+/** Snippet of `text` around the most query words, about `len` characters. */
+export function makeSnippet(text, terms, len = 220) {
+  const t = String(text || '').replace(/\s+/g, ' ').trim();
+  if (t.length <= len) return t;
+  const low = normalize(t);
+  let best = 0;
+  let bestHits = -1;
+  for (let i = 0; i < low.length; i += 40) {
+    const win = low.slice(i, i + len);
+    const hits = terms.reduce((s, w) => s + (w && win.includes(w) ? 1 : 0), 0);
+    if (hits > bestHits) { bestHits = hits; best = i; }
+  }
+  const start = Math.max(0, best - 20);
+  return `${start > 0 ? '…' : ''}${t.slice(start, start + len).trim()}${start + len < t.length ? '…' : ''}`;
+}
+
 export function createEngine({ general, office = null }) {
   const bundles = [general, office].filter(Boolean);
   const index = mergeIndexes(bundles.map((b) => b.index));
@@ -35,20 +90,7 @@ export function createEngine({ general, office = null }) {
   const chunks = new Map();
   if (office) for (const c of office.chunks) chunks.set(`${c.p}:${c.i}`, c);
 
-  function snippet(text, terms, len = 220) {
-    const t = String(text || '').replace(/\s+/g, ' ').trim();
-    if (t.length <= len) return t;
-    const low = normalize(t);
-    let best = 0;
-    let bestHits = -1;
-    for (let i = 0; i < low.length; i += 40) {
-      const win = low.slice(i, i + len);
-      const hits = terms.reduce((s, w) => s + (w && win.includes(w) ? 1 : 0), 0);
-      if (hits > bestHits) { bestHits = hits; best = i; }
-    }
-    const start = Math.max(0, best - 20);
-    return `${start > 0 ? '…' : ''}${t.slice(start, start + len).trim()}${start + len < t.length ? '…' : ''}`;
-  }
+  const snippet = makeSnippet;
 
   function sourceOf(key, terms) {
     if (key.startsWith('s:')) {
@@ -66,10 +108,10 @@ export function createEngine({ general, office = null }) {
     return null;
   }
 
-  function rulesAnswer(q, amount) {
+  function rulesAnswer(q, amount, { category: given = null } = {}) {
     const n = normalize(q);
-    if (!amount || !INTENT.test(n)) return null;
-    const category = detectCategory(q);
+    if (!amount || (!given && !INTENT.test(n))) return null;
+    const category = given || detectCategory(q);
     if (!category) return null;
     let value = amount.value;
     const step = amount.currency === 'USD' ? 1 : general.rules.currency.inr_per_usd;
@@ -79,9 +121,15 @@ export function createEngine({ general, office = null }) {
     return { category, amount, res, lines: recommendationLines(general.rules, res) };
   }
 
-  function ask(q, { limit = 60 } = {}) {
-    const results = search(index, q, { synonyms, limit });
-    const terms = tokenize(q).filter((t) => t.length > 2);
+  /**
+   * Answer a question. opts.long: treat q as long text (photo/selection) and search with its most
+   * distinctive terms; opts.userIndex: also search the user's own documents (a separate, third group).
+   */
+  function ask(q, { limit = 60, long = false, userIndex = null } = {}) {
+    const lq = long ? distinctiveQuery(index, q) : null;
+    const query = lq ? lq.query || q : q;
+    const results = search(index, query, { synonyms, limit });
+    const terms = tokenize(query).filter((t) => t.length > 2);
     const faqHits = results.filter((r) => r.key.startsWith('f:'));
     const srcHits = results.filter((r) => !r.key.startsWith('f:'));
     const top = faqHits[0];
@@ -102,16 +150,36 @@ export function createEngine({ general, office = null }) {
       sources.push({ ...s, score: h.score });
       if (sources.length >= 5) break;
     }
-    const amount = parseAmount(q);
+    // Long text (a photo, a page): the rules card only for exactly one plausible amount (at least ₹ 1 lakh,
+    // with a currency or next to an amount label) and a category the text states plainly; otherwise the
+    // amounts are only listed ("check with the rules").
+    let rules = null;
+    let amountsFound = [];
+    if (lq) {
+      const amounts = strictAmounts(q, { rate: general.rules.currency.inr_per_usd }).filter((a) => a.inr >= MIN_RULES_INR);
+      const category = explicitCategory(q);
+      if (amounts.length === 1 && category) {
+        const a = amounts[0];
+        rules = rulesAnswer(q, { value: a.value, currency: a.currency, assumed: false, modifier: null, text: a.text }, { category });
+      }
+      if (!rules) amountsFound = amounts.slice(0, 6);
+    } else {
+      rules = rulesAnswer(q, parseAmount(q));
+    }
     return {
       q,
+      long: Boolean(lq),
+      query: lq ? query : null,
       best,
       score: top?.score || 0,
       coverage: top?.coverage || 0,
       faqRanked: faqHits.slice(0, 5).map((h) => ({ id: h.key.slice(2), score: h.score, coverage: h.coverage })),
       related: relatedIds.map((id) => faq.get(id)),
       sources,
-      rules: rulesAnswer(q, amount),
+      // the user's own documents are ranked on their own, so the official material is never pushed out
+      userSources: userIndex ? userIndex.search(query, { limit: 5, minCoverage: lq ? 0.1 : 0.3 }) : [],
+      rules,
+      amountsFound,
     };
   }
 

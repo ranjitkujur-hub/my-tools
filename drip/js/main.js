@@ -1,5 +1,6 @@
 // Boot, unlock screen, navigation and hash routes:
-// #/ask, #/ask/<text>, #/q/<id>, #/sources, #/doc/<DOC>[/<n>], #/plan, #/plan/example, #/rfp, #/settings
+// #/ask, #/ask/<text>, #/q/<id>, #/sources, #/doc/<DOC>[/<n>], #/mydoc/<id>[/<i>], #/plan, #/plan/example,
+// #/plan/amount/<rupees>, #/plan/check (an entry read from a DRIP-MIS photo), #/rfp, #/settings
 import { h, L, clear, toast } from './ui/dom.js';
 import { state, unlock, restore, lock, lockoutRemaining } from './data.js';
 import { renderAsk, askFaq, askText, clearChat } from './ui/ask.js';
@@ -8,6 +9,9 @@ import { renderPlan, resetPlan } from './ui/plan.js';
 import { renderRfp } from './ui/rfp.js';
 import { renderSettings, applyPrefs } from './ui/settings.js';
 import { forgetKeys } from './store.js';
+import { renderMyDoc, releaseUrls } from './ui/mydocs.js';
+import { loadMyDocs, deleteAll } from './mydocs.js';
+import { terminateOcr } from './ocr.js';
 
 const main = document.getElementById('main');
 const nav = document.getElementById('nav');
@@ -44,6 +48,8 @@ function drawHeader() {
 }
 
 async function doLock() {
+  await terminateOcr();
+  releaseUrls();
   await lock(true);
   clearChat();
   resetPlan();
@@ -92,8 +98,9 @@ function showUnlock(message) {
   setTimeout(() => pass.focus(), 50);
 }
 
-function afterUnlock() {
+async function afterUnlock() {
   drawHeader();
+  await loadMyDocs();
   const r = pendingRoute;
   pendingRoute = null;
   if (r && r !== location.hash) location.hash = r;
@@ -128,15 +135,19 @@ function route() {
       if (b) renderViewer(main, dec(a), +b);
       else renderDoc(main, dec(a));
       break;
+    case 'mydoc':
+      active = 'sources';
+      renderMyDoc(main, dec(a), b !== undefined && b !== '' ? +b : null);
+      break;
     case 'plan':
-      renderPlan(main, { example: a === 'example' && state.tier === 'office' });
+      renderPlan(main, { example: a === 'example' && state.tier === 'office', amount: a === 'amount' ? +b : null, fromEntry: a === 'check' });
       break;
     case 'rfp':
       if (state.tier !== 'office') { location.hash = '#/ask'; return; }
       renderRfp(main);
       break;
     case 'settings':
-      renderSettings(main, { onLock: doLock, onForget: async () => { await forgetKeys(); await doLock(); }, onLang: () => { drawNav('settings'); drawHeader(); route(); } });
+      renderSettings(main, { onLock: doLock, onForget: async () => { await deleteAll(); await forgetKeys(); await doLock(); }, onLang: () => { drawNav('settings'); drawHeader(); route(); } });
       break;
     default:
       location.hash = '#/ask';
